@@ -24,7 +24,7 @@ int main() {
 		{
 			scanf("%d", &num[n]);
 		}//¼ıÀÚ
-		int small = 1 << 30, big = (-1)*(1 << 30);
+		int small = 0x7FFFFFFF, big = -0x7FFFFFFF;
 		do {
 			int res = num[0];
 			for (int n = 0; n < N - 1; n++)
