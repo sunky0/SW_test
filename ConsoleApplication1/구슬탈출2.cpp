@@ -1,306 +1,117 @@
 #include "stdafx.h"
-#include <iostream>
-#include <string>
+#include <cstdio>
+#include <algorithm>
+#include <queue>
 using namespace std;
-int map[10][10];
-int N, M, Answer = 11, RX, RY, BX, BY, x_h, y_h;
-void DFS(int cnt, int dir, int Rx, int Ry, int Bx, int By)//0북 1서 2남 3동
+int N, M, visit[11][11][11][11], bx, by, rx, ry;
+char map[11][11];
+int dir[4][2] = { {0,1},{0,-1},{1,0},{-1,0} };
+int bfs() {
+	queue<pair<pair<int, int>, pair<int, int>>> ball;
+	ball.push(make_pair(make_pair(rx, ry), make_pair(bx, by)));
+	visit[rx][ry][bx][by] = 1;
+	int cnt = 0;
+	while (!ball.empty()) {
+		int num = ball.size();
+		for (int i = num; i > 0; i--)
+		{
+			int r_x = ball.front().first.first;
+			int r_y = ball.front().first.second;
+			int b_x = ball.front().second.first;
+			int b_y = ball.front().second.second;
+			ball.pop();
+			if (map[r_x][r_y] == 'O'&&map[r_x][r_y] != map[b_x][b_y])//빨간공만 빠졌을 때
+				return cnt;
+			for (int i = 0; i < 4; i++) {
+				int Rx = r_x, Ry = r_y, Bx = b_x, By = b_y;
+				while (map[Rx + dir[i][0]][Ry + dir[i][1]] != '#'&&map[Rx][Ry] != 'O') {
+					Rx += dir[i][0];
+					Ry += dir[i][1];
+				}//빨강공 움직움직
+				while (map[Bx + dir[i][0]][By + dir[i][1]] != '#'&&map[Bx][By] != 'O') {
+					Bx += dir[i][0];
+					By += dir[i][1];
+				}//파란공 움직움직
+				if (Rx == Bx && Ry == By) {//같은 위치라면
+					if (map[Rx][Ry] == 'O')continue;//동시에 구멍에 빠지면 실패
+					if (abs(Rx - r_x) + abs(Ry - r_y) < abs(Bx - b_x) + abs(By - b_y)) {//Blue가 뒤에이쑴
+						Bx -= dir[i][0];
+						By -= dir[i][1];
+					}//빼줘야 함
+					else {
+						Rx -= dir[i][0];
+						Ry -= dir[i][1];
+					}
+				}
+				if (visit[Rx][Ry][Bx][By])continue;//방문을 했다면 넘어가고
+				ball.push(make_pair(make_pair(Rx, Ry), make_pair(Bx, By)));//안했다면 넣어줌
+				visit[Rx][Ry][Bx][By] = 1;//방문표시도 해줌
+			}
+		}
+		if (cnt == 10)
+			return -1;
+		cnt++;
+	}
+	return -1;
+}
+int Answer = 11;
+void DFS(int r_x, int r_y, int b_x, int b_y, int cnt)
 {
-	int x_r = Rx, y_r = Ry, x_b = Bx, y_b = By;
-	bool flag = false;//false면 r가 뒤 true면 r이 앞
-	if (cnt > Answer)return;
+	if (map[r_x][r_y] == 'O'&&map[r_x][r_y] != map[b_x][b_y])//빨간공만 빠졌을 때
+	{
+		if (Answer > cnt)Answer = cnt;
+		return;
+	}
+	if (cnt > 10)return;
 	else
 	{
-		if (dir == 0)
-		{
-			if (x_r > x_b)flag = false;
-			else flag = true;
-			if (flag)
-			{
-				for (int i = x_b; i >= 0; i--)
-				{
-					if (map[i][y_b] == 1)
-					{
-						x_b = i + 1;
-						break;
-					}
-					if (i == x_h && y_b == y_h)return;//실패
-				}
-				for (int i = x_r; i >= 0; i--)
-				{
-					if (map[i][y_r] == 1)
-					{
-						x_r = i + 1;
-						break;
-					}
-					if (i == x_h && y_r == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
+		for (int i = 0; i < 4; i++) {
+			int Rx = r_x, Ry = r_y, Bx = b_x, By = b_y;
+			while (map[Rx + dir[i][0]][Ry + dir[i][1]] != '#'&&map[Rx][Ry] != 'O') {
+				Rx += dir[i][0];
+				Ry += dir[i][1];
+			}
+			while (map[Bx + dir[i][0]][By + dir[i][1]] != '#'&&map[Bx][By] != 'O') {
+				Bx += dir[i][0];
+				By += dir[i][1];
+			}
+			if (Rx == Bx && Ry == By) {//같은 위치라면
+				if (map[Rx][Ry] == 'O')continue;//동시에 구멍에 빠지면 실패
+				if (abs(Rx - r_x) + abs(Ry - r_y) < abs(Bx - b_x) + abs(By - b_y)) {//Blue가 뒤에이쑴
+					Bx -= dir[i][0];
+					By -= dir[i][1];
+				}//빼줘야 함
+				else {
+					Rx -= dir[i][0];
+					Ry -= dir[i][1];
 				}
 			}
-			else
-			{
-				for (int i = x_r; i >= 0; i--)
-				{
-					if (map[i][y_r] == 1)
-					{
-						x_r = i + 1;
-						break;
-					}
-					if (i == x_h && y_r == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
-				}
-				for (int i = x_b; i >= 0; i--)
-				{
-					if (map[i][y_b] == 1)
-					{
-						x_b = i + 1;
-						break;
-					}
-					if (i == x_h && y_b == y_h)return;//실패
-				}
-			}
-			if (x_b == x_r && y_b == y_r)
-			{
-				if (flag)x_b += 1;
-				else x_r += 1;
-			}
-			DFS(cnt + 1, 1, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 2, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 3, x_r, y_r, x_b, y_b);
-		}
-		else if (dir == 1)//서
-		{
-			if (y_r > y_b)flag = false;//r이 뒤 true면 r이 앞
-			else flag = true;
-			if (flag)
-			{
-				for (int i = y_b; i >= 0; i--)
-				{
-					if (map[x_b][i] == 1)
-					{
-						y_b = i + 1;
-						break;
-					}
-					if (i == y_h && x_b == x_h)return;//실패
-				}
-				for (int i = y_r; i >= 0; i--)
-				{
-					if (map[x_r][i] == 1)
-					{
-						y_r = i + 1;
-						break;
-					}
-					if (x_r == x_h && i == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
-				}
-			}
-			else
-			{
-				for (int i = y_r; i >= 0; i--)
-				{
-					if (map[x_r][i] == 1)
-					{
-						y_r = i + 1;
-						break;
-					}
-					if (x_r == x_h && i == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
-				}
-				for (int i = y_b; i >= 0; i--)
-				{
-					if (map[x_b][i] == 1)
-					{
-						y_b = i + 1;
-						break;
-					}
-					if (i == y_h && x_b == x_h)return;//실패
-				}
-			}
-			if (x_b == x_r && y_b == y_r)
-			{
-				if (flag)y_b += 1;
-				else y_r += 1;
-			}
-			DFS(cnt + 1, 0, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 2, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 3, x_r, y_r, x_b, y_b);
-		}
-		else if (dir == 2)//남
-		{
-			if (x_r > x_b)flag = false;//r이 앞
-			else flag = true;
-			if (flag)
-			{
-				for (int i = x_r; i < N; i++)
-				{
-					if (map[i][y_r] == 1)
-					{
-						x_r = i - 1;
-						break;
-					}
-					if (i == x_h && y_r == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
-				}
-				for (int i = x_b; i < N; i++)
-				{
-					if (map[i][y_b] == 1)
-					{
-						x_b = i - 1;
-						break;
-					}
-					if (i == x_h && y_b == y_h)return;//실패
-				}
-			}
-			else
-			{
-				for (int i = x_b; i < N; i++)
-				{
-					if (map[i][y_b] == 1)
-					{
-						x_b = i - 1;
-						break;
-					}
-					if (i == x_h && y_b == y_h)return;//실패
-				}
-				for (int i = x_r; i < N; i++)
-				{
-					if (map[i][y_r] == 1)
-					{
-						x_r = i - 1;
-						break;
-					}
-					if (i == x_h && y_r == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
-				}
-			}
-			if (x_b == x_r && y_b == y_r)
-			{
-				if (flag)x_r -= 1;
-				else x_b -= 1;
-			}
-			DFS(cnt + 1, 0, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 1, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 3, x_r, y_r, x_b, y_b);
-		}
-		else
-		{
-			if (y_r > y_b)flag = false;//r이 앞 true면 r이 뒤
-			else flag = true;
-			if (flag)
-			{
-				for (int i = y_r; i < M; i++)
-				{
-					if (map[x_r][i] == 1)
-					{
-						y_r = i - 1;
-						break;
-					}
-					if (x_r == x_h && i == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
-				}
-				for (int i = y_b; i < M; i++)
-				{
-					if (map[x_b][i] == 1)
-					{
-						y_b = i - 1;
-						break;
-					}
-					if (i == y_h && x_b == x_h)return;//실패
-				}
-			}
-			else
-			{
-				for (int i = y_b; i < M; i++)
-				{
-					if (map[x_b][i] == 1)
-					{
-						y_b = i - 1;
-						break;
-					}
-					if (i == y_h && x_b == x_h)return;//실패
-				}
-				for (int i = y_r; i < M; i++)
-				{
-					if (map[x_r][i] == 1)
-					{
-						y_r = i - 1;
-						break;
-					}
-					if (x_r == x_h && i == y_h)
-					{
-						if (cnt < Answer)Answer = cnt;
-						return;
-					}
-				}
-			}
-			if (x_b == x_r && y_b == y_r)
-			{
-				if (flag)y_r -= 1;
-				else y_b -= 1;
-			}
-			DFS(cnt + 1, 0, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 1, x_r, y_r, x_b, y_b);
-			DFS(cnt + 1, 2, x_r, y_r, x_b, y_b);
+			if (visit[Rx][Ry][Bx][By])continue;//방문을 했다면 넘어가고
+			visit[Rx][Ry][Bx][By] = 1;//방문표시도 해줌
+			DFS(Rx, Ry, Bx, By, cnt + 1);
+			visit[Rx][Ry][Bx][By] = 0;
 		}
 	}
 }
-int main()
-{
-	cin >> N >> M;
-	string str;
-	for (int n = 0; n < N; n++)
-	{
-		cin >> str;
-		for (int m = 0; m < M; m++)//#=1, .=0, R=2, B=3, O=9;
-		{
-			if (str[m] == '#')map[n][m] = 1;
-			else if (str[m] == '.')
-			{
-				x_h = n;
-				y_h = m;
-				map[n][m] = 0;
+int main() {
+	scanf("%d %d", &N, &M);
+	for (int i = 0; i < N; i++) {
+		getchar();
+		for (int j = 0; j < M; j++) {
+			scanf("%c", &map[i][j]);
+			if (map[i][j] == 'B') {
+				bx = i;
+				by = j;
 			}
-			else if (str[m] == 'R')
-			{
-				RX = n;
-				RY = m;
-				map[n][m] = 0;
+			else if (map[i][j] == 'R') {
+				rx = i;
+				ry = j;
 			}
-			else if (str[m] == 'B')
-			{
-				map[n][m] = 0;
-				BX = n;
-				BY = m;
-			}
-			else map[n][m] = 0;
 		}
 	}
-	DFS(1, 0, RX, RY, BX, BY);
-	DFS(1, 1, RX, RY, BX, BY);
-	DFS(1, 2, RX, RY, BX, BY);
-	DFS(1, 3, RX, RY, BX, BY);
-	if (Answer == 11)Answer = -1;
-	printf("%d\n", Answer);
+	//DFS(rx, ry, bx, by, 0);
+	//if (Answer == 11)Answer = -1;
+	//printf("%d\n", Answer);
+	printf("%d\n",bfs());
 	return 0;
 }
