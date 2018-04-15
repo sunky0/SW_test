@@ -1,80 +1,113 @@
 #include "stdafx.h"
 #include <iostream>
-#include <string>
+#include <queue>
+//BFS 문제이다
 using namespace std;
-int L, R, C, minn = 1 << 30, end_x, end_y, end_z;
-int map[900][30];
-bool visit[900][30];
-int dir[6][3] = { {0,0,1},{0,0,-1},{1,0,0},{-1,0,0},{0,1,0},{0,-1,0} };
-void req(int x, int y, int z, int cnt)//
-{
-	visit[x*R + y][z] = true;
-	if (x == end_x && y == end_y && z == end_z)
-	{
-		if (minn > cnt)minn = cnt;
-	}
-	for (int i = 0; i < 6; i++)
-	{
-		int xx = x + dir[i][0];//L
-		int yy = y + dir[i][1];//R
-		int zz = z + dir[i][2];//C
 
-		if (xx < 0 || xx >= L || yy < 0 || yy >= R || zz < 0 || zz >= C || map[xx*R + yy][zz] == 9 || visit[xx*R + yy][zz])continue;
-		req(xx, yy, zz, cnt + 1);
-		//visit[xx*R + yy][zz] = false;
+//시간 복잡도: O(n^3)
+//공간 복잡도: O(n^3)
+//사용한 알고리즘: BFS
+//사용한 자료구조: 3차원배열, queue, 구조체
+
+int d[31][31][31];
+bool check[31][31][31];
+int l, r, c;
+int dir[6][3] = { { 1, 0, 0 },{ 0, 1, 0 },{ 0, 0, 1 },{ -1, 0, 0 },{ 0, -1, 0 },{ 0, 0, -1 } };
+
+struct s {
+	int h;
+	int x;
+	int y;
+};
+
+void bfs(int h, int x, int y) {
+
+	check[h][x][y] = true;
+	queue<s> q;
+	q.push({ h, x, y });
+
+	while (!q.empty()) {
+		h = q.front().h;
+		x = q.front().x;
+		y = q.front().y;
+		q.pop();
+
+		for (int i = 0; i<6; i++) {
+			int n_h = h + dir[i][0];
+			int n_x = x + dir[i][1];
+			int n_y = y + dir[i][2];
+
+			if (n_h >= 0 && n_h<l && n_x >= 0 && n_x < r && n_y >= 0 && n_y<c) {
+				if (check[n_h][n_x][n_y] == false && d[n_h][n_x][n_y] == 0) {
+
+					check[n_h][n_x][n_y] = true;
+					q.push({ n_h, n_x, n_y });
+					d[n_h][n_x][n_y] = d[h][x][y] + 1;
+				}
+			}
+		}
 	}
 }
-int main()
-{
-	for(;;)
-	{
-		for (int i = 0; i < 900; i++)
-		{
-			for (int j = 0; j < 30; j++)
-			{
-				map[i][j] = 0;
-				visit[i][j] = false;
-			}
 
+
+void clear() {
+
+	for (int i = 0; i<l; i++) {
+		for (int j = 0; j<r; j++) {
+			for (int k = 0; k<c; k++) {
+				d[i][j][k] = 0;
+				check[i][j][k] = false;
+			}
 		}
-		scanf("%d %d %d", &L, &R, &C);
-		if (L == 0 && R == 0 && C == 0)break;
-		string str;
-		minn = 1 << 30;
-		int start_x, start_y, start_z;
-		for (int i = 0; i < L; i++)
-		{
-			for (int j = 0; j < R; j++)
-			{
-				cin >> str;
-				for (int k = 0; k < str.size(); k++)
-				{
-					if (str[k] == '.')map[i*R + j][k] = 1;
-					else if (str[k] == '#')
-					{
-						map[i*R + j][k] = 9;
-						visit[i*R + j][k] = true;
+	}
+
+}
+
+int main() {
+
+	while (true) {
+		cin >> l >> r >> c;
+		if (l == 0 && r == 0 && c == 0) {
+			break;
+		}
+
+		int start_h = 0, start_x = 0, start_y = 0;
+		int end_h = 0, end_x = 0, end_y = 0;
+
+		for (int i = 0; i<l; i++) {
+			for (int j = 0; j<r; j++) {
+				for (int k = 0; k<c; k++) {
+					char c;
+					cin >> c;
+					if (c == '.') d[i][j][k] = 0;
+					else if (c == '#') d[i][j][k] = 1;
+					else if (c == 'S') {
+						d[i][j][k] = 0;
+						start_h = i;
+						start_x = j;
+						start_y = k;
 					}
-					else if (str[k] == 'S')
-					{
-						map[i*R + j][k] = 1;
-						start_x = i;
-						start_y = j;
-						start_z = k;
-					}
-					else if (str[k] == 'E')
-					{
-						map[i*R + j][k] = 1;
-						end_x = i;
-						end_y = j;
-						end_z = k;
+					else {
+						d[i][j][k] = 0;
+						end_h = i;
+						end_x = j;
+						end_y = k;
 					}
 				}
 			}
 		}
-		req(start_x, start_y, start_z, 0);
-		if (minn == 1 << 30)printf("Trapped!\n");
-		else printf("Escaped in %d minute(s).", minn);
+
+		bfs(start_h, start_x, start_y);
+
+		if (check[end_h][end_x][end_y] == true) {
+			cout << "Escaped in " << d[end_h][end_x][end_y] << " minute(s)." << endl;
+		}
+		else {
+			cout << "Trapped!" << endl;
+		}
+
+		clear();
+
+
 	}
-	return 0;
 }

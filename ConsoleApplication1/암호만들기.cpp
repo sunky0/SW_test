@@ -1,55 +1,35 @@
 #include"stdafx.h"
 #include<iostream>
-#include<algorithm>
-#include<string>
-#include<queue>
-
+#include <vector>
+#include <algorithm>
 using namespace std;
-int L, C;
-int num[16] = { 0, };
-int temp[16] = { 0, };
-int aeiou[5] = { 'a','e','i','o','u' };
-int temp2[16] = {};
-void solv() {
-	for (int i = 0; i < 16; i++) temp2[i] = temp[i];
-
-	sort(temp, temp + L);
-	int cnt = 0;
-	for (int i = 0; i < L; i++) {
-		for (int j = 0; j < 5; j++) {
-			if (temp[i] + 'a' == aeiou[j])cnt++;
-		}
-	}
-	if (cnt > 0 && cnt < L - 1) {
-		for (int i = 0; i < L; i++) {
-			char ss = temp[i] + 'a';
-			cout << ss;
-		}
-		printf("\n");
-	}
-
-	for (int i = 0; i < 16; i++) temp[i] = temp2[i];
-}
-void func(int l, int c) {
-	if (l == C && c < L) return;
-	if (c == L) {
-		solv();
+//순열조합문제이다
+vector<char> arr;
+char result[16];
+int l, c;
+void solve(char* result, int len, int index, int jacnt, int mocnt) {
+	if (len == l) {
+		result[len] = '\0';
+		if (mocnt >= 1 && jacnt >= 2) printf("%s\n", result);
 		return;
 	}
-	temp[c] = num[l];
-	func(l + 1, c + 1);
-	temp[c] = 0;
-	func(l + 1, c);
-}
-int main()
-{
-	cin >> L >> C;
-	char vv;
-	for (int c = 0; c < C; c++)
-	{
-		cin >> vv;
-		num[c] = vv - 'a';
+
+	for (int i = index; i <c; i++) {
+		result[len] = arr[i];
+		if (result[len] == 'a' || result[len] == 'e' || result[len] == 'i' || result[len] == 'o' || result[len] == 'u')
+			solve(result, len + 1, i + 1, jacnt, mocnt + 1);
+		else solve(result, len + 1, i + 1, jacnt + 1, mocnt);
 	}
-	func(0, 0);
-	return 0;
+}
+
+int main() {
+	cin >> l >> c;
+	arr.resize(c);
+	for (int i = 0; i < c; i++)
+		cin >> arr[i];
+
+	sort(arr.begin(), arr.end());
+
+	solve(result, 0, 0, 0, 0);
+
 }
